@@ -1,0 +1,7 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: homework-storage
+provisioner: rancher.io/local-path   # тот же provisioner, что у local-path
+reclaimPolicy: Retain                # главное отличие
+volumeBindingMode: WaitForFirstConsumer  # PV создастся только после запуска пода

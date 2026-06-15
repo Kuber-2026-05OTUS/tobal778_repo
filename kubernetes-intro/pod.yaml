@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: homework-pod
+  namespace: homework
+spec:
+  initContainers:
+  - name: init-downloader
+    image: busybox:latest
+    command:
+    - sh
+    - -c
+    - wget -O /init/index.html https://ex-files.ru || echo "<html><body>Error get content</body></html>" > /init/index.html
+    volumeMounts:
+    - name: shared-volume
+      mountPath: /init
+  containers:
+  - name: nginx
+    image: nginx:latest
+    ports:
+    - containerPort: 8000
+    command:
+    - /bin/sh
+    - -c
+    - |
+      echo 'server { listen 8000; root /homework; }' > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'
+    volumeMounts:
+    - name: shared-volume
+      mountPath: /homework
+    lifecycle:
+      preStop:
+        exec:
+          command: ["/bin/sh", "-c", "rm -f /homework/index.html"]
+  volumes:
+  - name: shared-volume
+    emptyDir: {}

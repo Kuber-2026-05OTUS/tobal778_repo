@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homework-config
+  namespace: homework
+data:
+  file: |
+    Hello from ConfigMap!
+    This content is served via /conf/file

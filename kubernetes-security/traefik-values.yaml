@@ -1,0 +1,17 @@
+# Включаем поддержку Gateway API
+providers:
+  kubernetesGateway:
+    enabled: true
+
+# Настраиваем entrypoints
+ports:
+  web:
+    port: 8000
+    expose:
+      default: true   # Этот порт будет открыт в сервисе Traefik
+
+  # Добавляем НОВЫЙ entrypoint на порту 8888 для нашего задания
+  homework:
+    port: 8888
+    expose:
+      default: true   # Чтобы порт 8888 тоже был проброшен в сервис NodePort

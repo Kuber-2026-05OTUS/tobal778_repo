@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: homework-pvc
+  namespace: homework
+spec:
+  accessModes:
+    - ReadWriteOnce   # том можно смонтировать только одним подом на запись и чтение
+  resources:
+    requests:
+      storage: 1Gi    # запрашиваем 1 гигабайт
+  storageClassName: homework-storage   # вместо local-path

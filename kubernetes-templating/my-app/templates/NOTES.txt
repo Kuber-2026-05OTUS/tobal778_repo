@@ -1,0 +1,4 @@
+Congratulations! You have deployed your app via Helm.
+
+To access your service, use:
+  kubectl port-forward -n {{ .Release.Namespace }} service/{{ include "my-app.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.targetPort }}

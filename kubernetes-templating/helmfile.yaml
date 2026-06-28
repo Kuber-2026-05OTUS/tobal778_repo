@@ -1,0 +1,30 @@
+repositories:
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+
+releases:
+  # Наш собственный чарт
+  - name: my-app
+    namespace: homework
+    chart: ./my-app
+    values:
+      - my-app-values.yaml
+    wait: true
+
+  # Kafka для prod
+  - name: kafka-prod
+    namespace: prod
+    chart: bitnami/kafka
+    version: 25.0.1
+    values:
+      - kafka-prod-values.yaml
+    wait: true
+
+  # Kafka для dev
+  - name: kafka-dev
+    namespace: dev
+    chart: bitnami/kafka
+    version: 25.0.1
+    values:
+      - kafka-dev-values.yaml
+    wait: true

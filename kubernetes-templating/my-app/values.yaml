@@ -1,0 +1,81 @@
+# Количество реплик
+replicaCount: 3
+
+# Образ
+image:
+  repository: nginx
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Пробы
+probes:
+  enabled: true
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 5
+  liveness:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+
+# Сервис
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+
+# PersistentVolumeClaim
+persistence:
+  enabled: true
+  storageClass: "homework-storage"   # или local-path, смотря что у тебя
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+
+# ConfigMap
+configMap:
+  data:
+    file: |
+      Hello from ConfigMap!
+      This content is served via /conf/file
+
+# ServiceAccount (основной для пода)
+serviceAccount:
+  create: true
+  name: monitoring   # используем monitoring из прошлого ДЗ
+
+# Дополнительные RBAC (ClusterRole, ClusterRoleBinding) – вынесем отдельно
+rbac:
+  metricsReader:
+    create: true
+    name: metrics-reader
+  binding:
+    create: true
+    name: monitoring-metrics-binding
+
+# Gateway API
+gateway:
+  create: true
+  gatewayClassName: traefik
+  port: 8888
+  host: homework.otus
+
+# Init-контейнеры
+initContainers:
+  downloader:
+    enabled: true
+    image: busybox:latest
+    url: https://ex-files.ru
+  metricsFetcher:
+    enabled: true
+    image: curlimages/curl:latest
+    # токен будет взят из монтирования SA
+
+# Зависимость Redis
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: false

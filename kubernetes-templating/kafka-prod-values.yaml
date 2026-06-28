@@ -1,0 +1,17 @@
+replicaCount: 5
+image:
+  tag: 3.5.2
+persistence:
+  enabled: true
+  size: 10Gi
+auth:
+  clientProtocol: SASL_PLAINTEXT
+  interBrokerProtocol: SASL_PLAINTEXT
+  sasl:
+    enabled: true
+    users:
+      - user1
+      - user2
+    passwords:
+      - password1
+      - password2

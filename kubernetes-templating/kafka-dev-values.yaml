@@ -1,0 +1,11 @@
+replicaCount: 1
+image:
+  tag: latest
+persistence:
+  enabled: true
+  size: 5Gi
+auth:
+  clientProtocol: PLAINTEXT
+  interBrokerProtocol: PLAINTEXT
+  sasl:
+    enabled: false

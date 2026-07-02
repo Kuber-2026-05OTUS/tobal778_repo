@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: nginx-monitor
+  namespace: homework
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: nginx-monitored
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 15s

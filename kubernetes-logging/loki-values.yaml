@@ -1,0 +1,67 @@
+loki:
+  commonConfig:
+    replication_factor: 1   # для одной реплики
+  auth_enabled: false       # отключаем аутентификацию по заданию
+  storage:
+    type: s3
+    bucketNames:
+      chunks: <empty>
+      ruler: <empty>
+      admin: <empty>
+    s3:
+      endpoint: storage.yandexcloud.net
+      region: ru-central1
+      accessKeyId: <empty>
+      secretAccessKey: <empty>
+      s3ForcePathStyle: false
+  schemaConfig:
+    configs:
+      - from: "2026-07-20"
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+
+# Развертывание только на infra-нодах
+deploymentMode: SingleBinary
+singleBinary:
+  replicas: 1
+
+# Tolerations для infra-нод
+tolerations:
+  - key: "node-role"
+    operator: "Equal"
+    value: "infra"
+    effect: "NoSchedule"
+
+# NodeSelector для infra-нод
+nodeSelector:
+  node-role: infra
+
+# Отключаем неиспользуемые компоненты
+backend:
+  replicas: 0
+read:
+  replicas: 0
+write:
+  replicas: 0
+ingester:
+  replicas: 0
+querier:
+  replicas: 0
+queryFrontend:
+  replicas: 0
+queryScheduler:
+  replicas: 0
+distributor:
+  replicas: 0
+compactor:
+  replicas: 0
+indexGateway:
+  replicas: 0
+chunksCache:
+  enabled: false
+resultsCache:
+  enabled: false

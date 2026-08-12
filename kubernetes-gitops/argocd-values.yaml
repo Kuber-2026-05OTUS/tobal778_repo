@@ -1,0 +1,38 @@
+# Установка на инфра-ноды
+controller:
+  tolerations:
+    - key: "node-role"
+      operator: "Equal"
+      value: "infra"
+      effect: "NoSchedule"
+  nodeSelector:
+    node-role: infra
+
+server:
+  tolerations:
+    - key: "node-role"
+      operator: "Equal"
+      value: "infra"
+      effect: "NoSchedule"
+  nodeSelector:
+    node-role: infra
+  service:
+    type: NodePort
+    nodePortHttp: 30090   # порт для UI
+
+repoServer:
+  tolerations:
+    - key: "node-role"
+      operator: "Equal"
+      value: "infra"
+      effect: "NoSchedule"
+  nodeSelector:
+    node-role: infra
+
+# Отключаем Dex (если не используем SSO)
+dex:
+  enabled: false
+
+# Отключаем приложение по умолчанию (applicationset-controller можно оставить)
+applicationset:
+  enabled: false

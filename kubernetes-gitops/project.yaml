@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: otus
+  namespace: argocd
+spec:
+  description: "Project for Otus homework"
+  # Разрешённые источники (ваш Git-репозиторий)
+  sourceRepos:
+    - 'https://github.com/Kuber-2026-05OTUS/tobal778_repo.git'   # замените на свой
+  # Разрешённые места назначения (кластер и namespace)
+  destinations:
+    - namespace: homework
+      server: https://kubernetes.default.svc   # текущий кластер
+    - namespace: homeworkhelm
+      server: https://kubernetes.default.svc
+  # Ограничения на ресурсы (можно оставить пустым)
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  # Разрешить синхронизацию в указанные namespace
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'

@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homework-helm
+  namespace: argocd
+spec:
+  project: otus
+  source:
+    repoURL: 'https://github.com/Kuber-2026-05OTUS/tobal778_repo.git'
+    path: kubernetes-templating/my-app   # путь к папке с чартом
+    targetRevision: HEAD
+    helm:
+      valueFiles:
+        - values.yaml
+      parameters:
+        - name: replicaCount
+          value: '5'   # переопределяем количество реплик
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: homeworkhelm   # отличается от первого
+  syncPolicy:
+    automated:
+      prune: true      # удалять ресурсы, которых нет в Git
+      selfHeal: true   # восстанавливать состояние, если кто-то изменил вручную
+    syncOptions:
+      - CreateNamespace=true

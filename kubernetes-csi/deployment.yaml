@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: csi-s3-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csi-s3-test
+  template:
+    metadata:
+      labels:
+        app: csi-s3-test
+    spec:
+      containers:
+        - name: alpine
+          image: cr.yandex/crp0o0rgqmo38q4hlnj8/alpine:latest
+          command: ["/bin/sh", "-c", "while true; do date >> /data/test.log; sleep 5; done"]
+          volumeMounts:
+            - name: s3-volume
+              mountPath: /data
+      volumes:
+        - name: s3-volume
+          persistentVolumeClaim:
+            claimName: csi-s3-pvc

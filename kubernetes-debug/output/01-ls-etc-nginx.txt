@@ -1,0 +1,12 @@
+drwxr-xr-x    3 root     root          4096 Oct  5  2020 .
+drwxr-xr-x    1 root     root          4096 Sep  3 19:30 ..
+drwxr-xr-x    2 root     root          4096 Oct  5  2020 conf.d
+-rw-r--r--    1 root     root          1007 Apr 21  2020 fastcgi_params
+-rw-r--r--    1 root     root          2837 Apr 21  2020 koi-utf
+-rw-r--r--    1 root     root          2223 Apr 21  2020 koi-win
+-rw-r--r--    1 root     root          5231 Apr 21  2020 mime.types
+lrwxrwxrwx    1 root     root            22 Apr 21  2020 modules -> /usr/lib/nginx/modules
+-rw-r--r--    1 root     root           643 Apr 21  2020 nginx.conf
+-rw-r--r--    1 root     root           636 Apr 21  2020 scgi_params
+-rw-r--r--    1 root     root           664 Apr 21  2020 uwsgi_params
+-rw-r--r--    1 root     root          3610 Apr 21  2020 win-utf

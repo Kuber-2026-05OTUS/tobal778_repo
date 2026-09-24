@@ -1,0 +1,29 @@
+- name: Prepare nodes (OS, sysctl, containerd)
+  hosts: k8s_cluster
+  become: true
+  roles:
+    - common
+
+- name: Install Kubernetes components
+  hosts: k8s_cluster
+  become: true
+  roles:
+    - k8s-install
+
+- name: Initialize control plane
+  hosts: control_plane
+  become: true
+  roles:
+    - control-plane
+
+- name: Install CNI (Calico)
+  hosts: control_plane
+  become: true
+  roles:
+    - cni
+
+- name: Join worker nodes
+  hosts: workers
+  become: true
+  roles:
+    - workers

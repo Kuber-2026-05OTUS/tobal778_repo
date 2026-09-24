@@ -1,0 +1,33 @@
+- name: Check if Calico CNI is running
+  shell: kubectl get pods -n kube-system -l k8s-app=calico-node | grep Running
+  register: cni_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Download Calico manifest
+  get_url:
+    url: https://raw.githubusercontent.com/projectcalico/calico/v{{ calico_version }}/manifests/calico.yaml
+    dest: /tmp/calico.yaml
+  when: cni_check.rc != 0
+  run_once: true
+
+- name: Configure Calico to use wg0 interface
+  replace:
+    path: /tmp/calico.yaml
+    regexp: 'value: "first-found"'
+    replace: 'value: "interface=wg0"'
+  when: cni_check.rc != 0
+  run_once: true
+
+- name: Set Calico MTU for WireGuard (1420)
+  replace:
+    path: /tmp/calico.yaml
+    regexp: '(- name: FELIX_LOGSEVERITYSCREEN\s+value: "")'
+    replace: '\1\n        - name: FELIX_MTU\n          value: "1420"'
+  when: cni_check.rc != 0
+  run_once: true
+
+- name: Apply patched Calico manifest
+  command: kubectl apply -f /tmp/calico.yaml
+  when: cni_check.rc != 0
+  run_once: true

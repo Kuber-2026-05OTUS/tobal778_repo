@@ -1,0 +1,46 @@
+stages:
+  - lint
+  - deploy
+  - upgrade
+  - verify
+
+variables:
+  ANSIBLE_HOST_KEY_CHECKING: "False"
+  ANSIBLE_TIMEOUT: "60"
+
+default:
+  tags:
+    - k8s-deploy
+
+lint:
+  stage: lint
+  script:
+    - ansible-playbook playbooks/deploy.yml --syntax-check
+    - ansible-playbook playbooks/upgrade.yml --syntax-check
+
+deploy_cluster:
+  stage: deploy
+  script:
+    - ansible-playbook playbooks/deploy.yml
+  only:
+    - main
+  when: manual
+
+verify_cluster:
+  stage: verify
+  script:
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519_k8s user@10.23.23.100 "kubectl get nodes -o wide"
+  needs: ["deploy_cluster"]
+
+upgrade_cp:
+  stage: upgrade
+  script:
+    - ansible-playbook playbooks/upgrade.yml --tags "cp_upgrade"
+  when: manual
+
+upgrade_workers:
+  stage: upgrade
+  script:
+    - ansible-playbook playbooks/upgrade.yml --tags "worker_upgrade" -f 1
+  when: manual
+  needs: ["upgrade_cp"]

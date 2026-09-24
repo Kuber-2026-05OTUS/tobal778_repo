@@ -1,0 +1,81 @@
+- name: Unhold kubeadm
+  dpkg_selections:
+    name: kubeadm
+    selection: install
+
+- name: Download Kubernetes target version APT key
+  shell: |
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ k8s_upgrade_version_major_minor }}/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring-v{{ k8s_upgrade_version_major_minor }}.gpg
+  args:
+    creates: "/etc/apt/keyrings/kubernetes-apt-keyring-v{{ k8s_upgrade_version_major_minor }}.gpg"
+
+- name: Add Kubernetes target version APT repository
+  apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring-v{{ k8s_upgrade_version_major_minor }}.gpg] https://pkgs.k8s.io/core:/stable:/v{{ k8s_upgrade_version_major_minor }}/deb/ /"
+    state: present
+    filename: "kubernetes-v{{ k8s_upgrade_version_major_minor }}"
+    update_cache: true
+
+- name: Get exact available version of kubeadm
+  shell: "apt-cache madison kubeadm | awk '/{{ k8s_upgrade_version_full }}/ {print $3; exit}'"
+  register: available_kubeadm_version
+  changed_when: false
+  failed_when: available_kubeadm_version.stdout == ""
+
+- name: Upgrade kubeadm to exact version
+  apt:
+    name: "kubeadm={{ available_kubeadm_version.stdout }}"
+    state: present
+    allow_change_held_packages: true
+
+- name: Check upgrade plan
+  command: kubeadm upgrade plan
+  register: upgrade_plan
+  changed_when: false
+
+# ШАГ 1: Только для ПЕРВОЙ ноды Control Plane
+- name: Apply cluster upgrade on FIRST control plane node
+  command: kubeadm upgrade apply v{{ k8s_upgrade_version_full }} -y
+  when: inventory_hostname == groups['control_plane'][0]
+
+# ШАГ 2: Для всех ОСТАЛЬНЫХ нод Control Plane
+- name: Apply node upgrade on SUBSEQUENT control plane nodes
+  command: kubeadm upgrade node
+  when: inventory_hostname != groups['control_plane'][0]
+
+- name: Unhold kubelet and kubectl
+  dpkg_selections:
+    name: "{{ item }}"
+    selection: install
+  loop:
+    - kubelet
+    - kubectl
+
+- name: Get exact available version of kubelet
+  shell: "apt-cache madison kubelet | awk '/{{ k8s_upgrade_version_full }}/ {print $3; exit}'"
+  register: available_kubelet_version
+  changed_when: false
+  failed_when: available_kubelet_version.stdout == ""
+
+- name: Upgrade kubelet and kubectl
+  apt:
+    name:
+      - "kubelet={{ available_kubelet_version.stdout }}"
+      - "kubectl={{ available_kubeadm_version.stdout }}"
+    state: present
+    allow_change_held_packages: true
+
+- name: Restart kubelet
+  systemd:
+    name: kubelet
+    state: restarted
+    daemon_reload: true
+
+- name: Hold Kubernetes packages again
+  dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - kubelet
+    - kubeadm
+    - kubectl

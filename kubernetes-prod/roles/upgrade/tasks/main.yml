@@ -1,0 +1,7 @@
+- name: Include control plane upgrade tasks
+  include_tasks: control-plane.yml
+  when: upgrade_component == 'control-plane'
+
+- name: Include worker upgrade tasks
+  include_tasks: workers.yml
+  when: upgrade_component == 'worker'

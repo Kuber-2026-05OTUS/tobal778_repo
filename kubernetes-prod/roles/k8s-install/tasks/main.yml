@@ -1,0 +1,40 @@
+- name: Create APT keyring directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Add Kubernetes APT key
+  shell: |
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ k8s_version_major_minor }}/deb/Release.key | gpg --dearmor --yes -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+- name: Add Kubernetes APT repository
+  apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ k8s_version_major_minor }}/deb/ /"
+    state: present
+    filename: kubernetes
+
+- name: Configure kubelet to use WireGuard IP as Node IP
+  lineinfile:
+    path: /etc/default/kubelet
+    line: 'KUBELET_EXTRA_ARGS=--node-ip={{ ansible_host }}'
+    create: yes
+    regexp: '^KUBELET_EXTRA_ARGS='
+
+- name: Install kubeadm, kubelet and kubectl
+  apt:
+    name:
+      - kubelet={{ k8s_version_full }}-*
+      - kubeadm={{ k8s_version_full }}-*
+      - kubectl={{ k8s_version_full }}-*
+    state: present
+    update_cache: true
+
+- name: Hold Kubernetes packages
+  dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - kubelet
+    - kubeadm
+    - kubectl

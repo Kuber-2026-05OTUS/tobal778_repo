@@ -1,0 +1,78 @@
+- name: Cordon node
+  command: kubectl cordon {{ inventory_hostname }}
+  delegate_to: "{{ groups['control_plane'][0] }}"
+  become: true
+
+- name: Drain node
+  command: kubectl drain {{ inventory_hostname }} --ignore-daemonsets --delete-emptydir-data --force
+  delegate_to: "{{ groups['control_plane'][0] }}"
+  become: true
+
+- name: Unhold kubeadm
+  dpkg_selections:
+    name: kubeadm
+    selection: install
+
+- name: Download Kubernetes target version APT key
+  shell: |
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ k8s_upgrade_version_major_minor }}/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring-v{{ k8s_upgrade_version_major_minor }}.gpg
+  args:
+    creates: "/etc/apt/keyrings/kubernetes-apt-keyring-v{{ k8s_upgrade_version_major_minor }}.gpg"
+
+- name: Add Kubernetes target version APT repository
+  apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring-v{{ k8s_upgrade_version_major_minor }}.gpg] https://pkgs.k8s.io/core:/stable:/v{{ k8s_upgrade_version_major_minor }}/deb/ /"
+    state: present
+    filename: "kubernetes-v{{ k8s_upgrade_version_major_minor }}"
+    update_cache: true
+
+- name: Get exact available version of kubeadm
+  shell: "apt-cache madison kubeadm | awk '/{{ k8s_upgrade_version_full }}/ {print $3; exit}'"
+  register: available_kubeadm_version
+  changed_when: false
+  failed_when: available_kubeadm_version.stdout == ""
+
+- name: Upgrade kubeadm
+  apt:
+    name: "kubeadm={{ available_kubeadm_version.stdout }}"
+    state: present
+    allow_change_held_packages: true
+
+- name: Upgrade node configuration
+  command: kubeadm upgrade node
+
+- name: Unhold kubelet
+  dpkg_selections:
+    name: kubelet
+    selection: install
+
+- name: Get exact available version of kubelet
+  shell: "apt-cache madison kubelet | awk '/{{ k8s_upgrade_version_full }}/ {print $3; exit}'"
+  register: available_kubelet_version
+  changed_when: false
+  failed_when: available_kubelet_version.stdout == ""
+
+- name: Upgrade kubelet
+  apt:
+    name: "kubelet={{ available_kubelet_version.stdout }}"
+    state: present
+    allow_change_held_packages: true
+
+- name: Restart kubelet
+  systemd:
+    name: kubelet
+    state: restarted
+    daemon_reload: true
+
+- name: Hold kubelet and kubeadm again
+  dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - kubelet
+    - kubeadm
+
+- name: Uncordon node
+  command: kubectl uncordon {{ inventory_hostname }}
+  delegate_to: "{{ groups['control_plane'][0] }}"
+  become: true

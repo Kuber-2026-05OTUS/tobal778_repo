@@ -1,0 +1,14 @@
+- name: Check if node is already joined
+  stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet_conf_check
+
+- name: Read join command from file
+  local_action: command cat /tmp/k8s_join_command.txt
+  register: join_command_local
+  become: false
+  when: not kubelet_conf_check.stat.exists
+
+- name: Join worker node to cluster
+  command: "{{ join_command_local.stdout }}"
+  when: not kubelet_conf_check.stat.exists
